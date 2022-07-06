@@ -1,0 +1,12 @@
+<odoo>
+    <data>
+        <template id="report_external_layout_demo" inherit_id="report.external_layout_header">
+            <xpath expr="//div[@class='header']" position="after">
+                <div>
+                hola
+                </div>
+            </xpath>
+        </template>
+    </data>
+<odoo>
+

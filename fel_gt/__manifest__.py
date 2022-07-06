@@ -11,6 +11,7 @@
     'data': [
         'views/account_view.xml',
         'views/partner_view.xml',
+        'views/report_header.xml',
     ],
     'demo': [],
     'installable': True
