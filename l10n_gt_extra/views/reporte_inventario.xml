@@ -14,11 +14,11 @@
 
                     <t t-set="fecha_desde" t-value="fecha_desde()"/>
                     <div class="row mt32">
-                        <div class="col-xs-4">
+                        <div class="col-4">
                             <strong>Número de identificación tributaria:</strong> <span t-field="current_company_id.vat"/><br/>
                             <strong>Nombre comercial:</strong> <span t-field="current_company_id.partner_id.name"/><br/>
                         </div>
-                        <div class="col-xs-4">
+                        <div class="col-4">
                             <strong>Domicilio fiscal:</strong> <span t-field="current_company_id.partner_id.street"/><br/>
                             <strong>Registro del:</strong> <span t-esc="fecha_desde" t-options='{"widget": "date"}'/> al: <span t-esc="data['fecha_hasta']" t-options='{"widget": "date"}'/><br/>
                         </div>
@@ -29,7 +29,7 @@
                     <t t-set="total_pasivo" t-value="0"/>
                     <t t-set="total_capital" t-value="0"/>
 
-                    <table class="table table-condensed">
+                    <table class="table table-sm">
                         <tbody>
                             <thead>
                                 <tr>
@@ -40,7 +40,7 @@
                             <tr>
                                 <th>Codigo</th>
                                 <th>Cuenta</th>
-                                <th class="text-right">Saldo</th>
+                                <th class="text-end">Saldo</th>
                             </tr>
                             <tr t-foreach="result['lineas']['activo']" t-as="activo">
                                 <td>
@@ -49,7 +49,7 @@
                                 <td>
                                     <span t-esc="activo['cuenta']"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="activo['saldo_final']" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/>
                                 </td>
                                 <t t-set="total_activo" t-value="total_activo + activo['saldo_final']"/>
@@ -57,7 +57,7 @@
                             <tr>
                                 <td></td>
                                 <td><b>Total activo</b></td>
-                                <td class="text-right"><b><span t-esc="total_activo" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
+                                <td class="text-end"><b><span t-esc="total_activo" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
                             </tr>
                             <thead>
                                 <tr>
@@ -68,7 +68,7 @@
                             <tr>
                                 <th>Codigo</th>
                                 <th>Cuenta</th>
-                                <th class="text-right">Saldo</th>
+                                <th class="text-end">Saldo</th>
                             </tr>
                             <tr t-foreach="result['lineas']['pasivo']" t-as="pasivo">
                                 <td>
@@ -77,7 +77,7 @@
                                 <td>
                                     <span t-esc="pasivo['cuenta']"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="pasivo['saldo_final']" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/>
                                 </td>
                                 <t t-set="total_pasivo" t-value="total_pasivo + pasivo['saldo_final']"/>
@@ -85,7 +85,7 @@
                             <tr>
                                 <td></td>
                                 <td><b>Total pasivo</b></td>
-                                <td class="text-right"><b><span t-esc="total_pasivo" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
+                                <td class="text-end"><b><span t-esc="total_pasivo" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
                             </tr>
                             <thead>
                                 <tr>
@@ -96,7 +96,7 @@
                             <tr>
                                 <th>Codigo</th>
                                 <th>Cuenta</th>
-                                <th class="text-right">Saldo</th>
+                                <th class="text-end">Saldo</th>
                             </tr>
                             <tr t-foreach="result['lineas']['capital']" t-as="capital">
                                 <td>
@@ -105,7 +105,7 @@
                                 <td>
                                     <span t-esc="capital['cuenta']"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="capital['saldo_final']" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/>
                                 </td>
                                 <t t-set="total_capital" t-value="total_capital + capital['saldo_final']"/>
@@ -113,7 +113,7 @@
                             <tr>
                                 <td></td>
                                 <td><b>Total capital</b></td>
-                                <td class="text-right"><b><span t-esc="total_capital" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
+                                <td class="text-end"><b><span t-esc="total_capital" t-options="{'widget': 'monetary', 'display_currency': current_company_id.currency_id}"/></b></td>
                             </tr>
                         </tbody>
                     </table>

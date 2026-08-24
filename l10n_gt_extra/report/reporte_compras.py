@@ -2,10 +2,10 @@
 
 from odoo import api, models
 from odoo.exceptions import UserError
-import logging
 
 class ReporteCompras(models.AbstractModel):
     _name = 'report.l10n_gt_extra.reporte_compras'
+    _description = 'Libro de compras y servicios'
 
     def lineas(self, datos):
         totales = {}
@@ -23,13 +23,9 @@ class ReporteCompras(models.AbstractModel):
             ('journal_id','in',journal_ids),
             ('date','<=',datos['fecha_hasta']),
             ('date','>=',datos['fecha_desde']),
+            ('move_type','in',['in_invoice','in_refund']),
         ]
-        
-        if 'type' in self.env['account.move'].fields_get():
-            filtro.append(('type','in',['in_invoice','in_refund']))
-        else:
-            filtro.append(('move_type','in',['in_invoice','in_refund']))
-        
+
         facturas = self.env['account.move'].search(filtro)
 
         lineas = []
@@ -46,7 +42,7 @@ class ReporteCompras(models.AbstractModel):
                     tipo_cambio = abs(total / f.amount_total)
 
             tipo = 'FACT'
-            tipo_interno_factura = f.type if 'type' in f.fields_get() else f.move_type
+            tipo_interno_factura = f.move_type
             if tipo_interno_factura != 'in_invoice':
                 tipo = 'NC'
             if f.nota_debito:
@@ -57,7 +53,7 @@ class ReporteCompras(models.AbstractModel):
             numero = f.ref or ''
             
             # Por si usa factura electrónica
-            if 'firma_fel' in f.fields_get() and f.firma_fel:
+            if 'firma_fel' in f._fields and f.firma_fel:
                 numero = str(f.serie_fel) + '-' + str(f.numero_fel)
 
             linea = {
@@ -88,7 +84,7 @@ class ReporteCompras(models.AbstractModel):
 
                 tipo_linea = f.tipo_gasto or 'mixto'
                 if tipo_linea == 'mixto':
-                    if l.product_id.type == 'product':
+                    if l.product_id.is_storable:
                         tipo_linea = 'compra'
                     else:
                         tipo_linea = 'servicio'

@@ -1,18 +1,15 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
-from odoo.tools.float_utils import float_round
-
-from datetime import datetime
 import base64
-from lxml import etree
-import requests
-import re
-
-#from import XMLSigner
-
 import logging
+
+import requests
+from lxml import etree
+
+from odoo import fields, models
+from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -21,12 +18,9 @@ class AccountMove(models.Model):
     
     def _post(self, soft=True):
         if self.certificar():
-            return super(AccountMove, self)._post(soft)
+            return super()._post(soft)
+        return self.env['account.move']
 
-    def post(self):
-        if self.certificar():
-            return super(AccountMove, self).post()
-    
     def certificar(self):
         for factura in self:
             if factura.requiere_certificacion():
@@ -36,11 +30,11 @@ class AccountMove(models.Model):
                     return False
                 
                 dte = factura.dte_documento()
-                logging.warn(dte)
+                _logger.info(dte)
                 xmls = etree.tostring(dte, encoding="UTF-8")
                 xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
                 xmls_base64 = base64.b64encode(xmls)
-                logging.warn(xmls)
+                _logger.info(xmls)
 
                 headers = { "Content-Type": "application/json" }
                 data = {
@@ -50,7 +44,7 @@ class AccountMove(models.Model):
                     "alias": factura.company_id.usuario_fel,
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r.text)
+                _logger.info(r.text)
                 firma_json = r.json()
                 if firma_json["resultado"]:
 
@@ -66,7 +60,7 @@ class AccountMove(models.Model):
                         "xml_dte": firma_json["archivo"]
                     }
                     r = requests.post("https://certificador.feel.com.gt/fel/certificacion/v2/dte/", json=data, headers=headers)
-                    logging.warn(r.json())
+                    _logger.info(r.json())
                     certificacion_json = r.json()
                     if certificacion_json["resultado"]:
                         factura.firma_fel = certificacion_json["uuid"]
@@ -88,7 +82,7 @@ class AccountMove(models.Model):
         return True
         
     def button_cancel(self):
-        result = super(AccountMove, self).button_cancel()
+        result = super().button_cancel()
         for factura in self:
             if factura.requiere_certificacion() and factura.firma_fel:
                 dte = factura.dte_anulacion()
@@ -96,7 +90,7 @@ class AccountMove(models.Model):
                 xmls = etree.tostring(dte, encoding="UTF-8")
                 xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
                 xmls_base64 = base64.b64encode(xmls)
-                logging.warn(xmls)
+                _logger.info(xmls)
 
                 headers = { "Content-Type": "application/json" }
                 data = {
@@ -107,7 +101,7 @@ class AccountMove(models.Model):
                     "es_anulacion": "S",
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r.text)
+                _logger.info(r.text)
                 firma_json = r.json()
                 if firma_json["resultado"]:
 
@@ -123,7 +117,7 @@ class AccountMove(models.Model):
                         "xml_dte": firma_json["archivo"]
                     }
                     r = requests.post("https://certificador.feel.com.gt/fel/anulacion/v2/dte/", json=data, headers=headers)
-                    logging.warn(r.text)
+                    _logger.info(r.text)
                     certificacion_json = r.json()
                     if not certificacion_json["resultado"]:
                         raise UserError(str(certificacion_json["descripcion_errores"]))

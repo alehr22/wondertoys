@@ -2,18 +2,18 @@
 
 {
     'name': 'FEL Guatemala',
-    'version': '1.0',
-    'category': 'Custom',
+    'version': '19.0.1.0.0',
+    'category': 'Accounting/Localizations/EDI',
     'description': """ Campos y funciones base para la facturación electrónica en Guatemala """,
     'author': 'Rodrigo Fernandez',
     'website': 'http://aquih.com/',
-    'depends': ['l10n_gt_extra'],
+    'license': 'AGPL-3',
+    'depends': ['l10n_gt_extra', 'stock'],
     'data': [
         'views/account_view.xml',
         'views/partner_view.xml',
         'views/report_delivery.xml',
     ],
     'demo': [],
-    'installable': True
+    'installable': True,
 }
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

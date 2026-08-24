@@ -1,16 +1,17 @@
 # -*- encoding: utf-8 -*-
 
 from odoo import api, models
-import logging
+
 
 class ReporteBanco(models.AbstractModel):
     _name = 'report.l10n_gt_extra.reporte_banco'
+    _description = 'Libro de banco'
 
     def lineas(self, datos):
         cuenta = self.env['account.account'].browse(datos['cuenta_bancaria_id'][0])
 
         lineas = []
-        for linea in self.env['account.move.line'].search([('account_id','=',cuenta.id), ('parent_state','=','posted'), ('date','>=',datos['fecha_desde']), ('date','<=',datos['fecha_hasta'])], order='date'):
+        for linea in self.env['account.move.line'].search([('account_id', '=', cuenta.id), ('parent_state', '=', 'posted'), ('date', '>=', datos['fecha_desde']), ('date', '<=', datos['fecha_hasta'])], order='date'):
             detalle = {
                 'fecha': linea.date,
                 'documento': linea.move_id.name if linea.move_id else '',
@@ -32,14 +33,14 @@ class ReporteBanco(models.AbstractModel):
 
             # Si la cuenta no tiene moneda o la moneda de la cuenta es la misma de la compañía
             if not cuenta.currency_id or (cuenta.currency_id.id == linea.company_id.currency_id.id):
-            
+
                 # Se agregan lineas que no tiene moneda o tienen la misma moneda que la compañía
                 if not linea.currency_id or linea.currency_id.id == linea.company_id.currency_id.id:
                     lineas.append(detalle)
-                    
+
             # Sino, si la cuenta si tienen moneda y la moneda de la cuenta es diferente que la de la compañía
             else:
-            
+
                 # Se agregan lineas que tienen la moneda de la cuenta
                 if linea.currency_id.id == cuenta.currency_id.id:
                     lineas.append(detalle)
@@ -53,15 +54,19 @@ class ReporteBanco(models.AbstractModel):
             balance = 0
 
         for linea in lineas:
-
             balance = balance + linea['debito'] - linea['credito']
             linea['balance'] = balance
 
         return lineas
 
     def balance_inicial(self, datos):
-        self.env.cr.execute('select coalesce(sum(debit) - sum(credit), 0) as balance, coalesce(sum(amount_currency), 0) as balance_moneda from account_move_line where account_id = %s and parent_state = %s and date < %s', (datos['cuenta_bancaria_id'][0], 'posted', datos['fecha_desde']))
-        return self.env.cr.dictfetchall()[0]
+        dominio = [
+            ('account_id', '=', datos['cuenta_bancaria_id'][0]),
+            ('parent_state', '=', 'posted'),
+            ('date', '<', datos['fecha_desde']),
+        ]
+        balance, moneda = self.env['account.move.line']._read_group(dominio, [], ['balance:sum', 'amount_currency:sum'])[0]
+        return {'balance': balance or 0, 'balance_moneda': moneda or 0}
 
     @api.model
     def _get_report_values(self, docids, data=None):
@@ -73,10 +78,8 @@ class ReporteBanco(models.AbstractModel):
             'doc_model': model,
             'data': data['form'],
             'docs': docs,
-            'moneda': docs[0].cuenta_bancaria_id.currency_id or self.env.user.company_id.currency_id,
+            'moneda': docs[0].cuenta_bancaria_id.currency_id or self.env.company.currency_id,
             'lineas': self.lineas,
             'balance_inicial': self.balance_inicial(data['form']),
             'current_company_id': self.env.company,
         }
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

@@ -1,15 +1,14 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo import fields, models
 import time
 import xlsxwriter
 import base64
 import io
-import logging
 
 class AsistenteReporteCompras(models.TransientModel):
     _name = 'l10n_gt_extra.asistente_reporte_compras'
+    _description = 'Asistente libro de compras'
 
     diarios_id = fields.Many2many("account.journal", string="Diarios", required=True)
     impuesto_id = fields.Many2one("account.tax", string="Impuesto", required=True)
@@ -17,7 +16,7 @@ class AsistenteReporteCompras(models.TransientModel):
     fecha_desde = fields.Date(string="Fecha Inicial", required=True, default=lambda self: time.strftime('%Y-%m-01'))
     fecha_hasta = fields.Date(string="Fecha Final", required=True, default=lambda self: time.strftime('%Y-%m-%d'))
     name = fields.Char('Nombre archivo', size=32)
-    archivo = fields.Binary('Archivo', filters='.xls')
+    archivo = fields.Binary('Archivo')
 
     def print_report(self):
         data = {

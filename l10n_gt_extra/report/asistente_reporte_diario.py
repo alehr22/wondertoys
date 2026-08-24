@@ -1,15 +1,14 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo import fields, models
 import time
 import xlsxwriter
 import base64
 import io
-import logging
 
 class AsistenteReporteDiario(models.TransientModel):
     _name = 'l10n_gt_extra.asistente_reporte_diario'
+    _description = 'Asistente libro diario'
 
     def _default_cuenta(self):
         if len(self.env.context.get('active_ids', [])) > 0:
@@ -23,7 +22,7 @@ class AsistenteReporteDiario(models.TransientModel):
     fecha_desde = fields.Date(string="Fecha Inicial", required=True, default=lambda self: time.strftime('%Y-%m-01'))
     fecha_hasta = fields.Date(string="Fecha Final", required=True, default=lambda self: time.strftime('%Y-%m-%d'))
     name = fields.Char('Nombre archivo', size=32)
-    archivo = fields.Binary('Archivo', filters='.xls')
+    archivo = fields.Binary('Archivo')
 
     def print_report(self):
         data = {
@@ -49,11 +48,11 @@ class AsistenteReporteDiario(models.TransientModel):
 
             hoja.write(0, 0, 'LIBRO DIARIO')
             hoja.write(2, 0, 'NUMERO DE IDENTIFICACION TRIBUTARIA')
-            hoja.write(2, 1, w.cuentas_id[0].company_id.partner_id.vat)
+            hoja.write(2, 1, w.env.company.partner_id.vat)
             hoja.write(3, 0, 'NOMBRE COMERCIAL')
-            hoja.write(3, 1, w.cuentas_id[0].company_id.partner_id.name)
+            hoja.write(3, 1, w.env.company.partner_id.name)
             hoja.write(2, 3, 'DOMICILIO FISCAL')
-            hoja.write(2, 4, w.cuentas_id[0].company_id.partner_id.street)
+            hoja.write(2, 4, w.env.company.partner_id.street)
             hoja.write(3, 3, 'REGISTRO DEL')
             hoja.write(3, 4, w.fecha_desde, formato_fecha)
             hoja.write(3, 5, 'AL')

@@ -11,25 +11,25 @@
                     <h2><span t-esc="current_company_id.name"/>: Libro de banco</h2>
 
                     <div class="row mt32">
-                        <div class="col-xs-4">
+                        <div class="col-4">
                             <strong>Cuenta:</strong> <span t-esc="data['cuenta_bancaria_id'][1]"/><br/>
                         </div>
-                        <div class="col-xs-4">
+                        <div class="col-4">
                             <strong>Fecha inicial:</strong> <span t-esc="data['fecha_desde']" t-options='{"widget": "date"}'/><br/>
                             <strong>Fecha final:</strong> <span t-esc="data['fecha_hasta']" t-options='{"widget": "date"}'/>
                         </div>
                     </div>
 
-                    <table class="table table-condensed">
+                    <table class="table table-sm">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
                                 <th>Doc</th>
                                 <th>Nombre</th>
                                 <th>Concepto</th>
-                                <th class="text-right">Credito</th>
-                                <th class="text-right">Debito</th>
-                                <th class="text-right">Balance</th>
+                                <th class="text-end">Credito</th>
+                                <th class="text-end">Debito</th>
+                                <th class="text-end">Balance</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -43,11 +43,11 @@
                                 </td>
                                 <td>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="balance_inicial['balance_moneda'] or balance_inicial['balance']" t-options="{'widget': 'monetary', 'display_currency': moneda}"/>
                                 </td>
                             </tr>
@@ -64,13 +64,13 @@
                                 <td>
                                     <span t-esc="l['concepto']"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                      <span t-esc="l['debito']" t-options="{'widget': 'monetary', 'display_currency': l['moneda']}"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="l['credito']" t-options="{'widget': 'monetary', 'display_currency': l['moneda']}"/>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <span t-esc="l['balance']" t-options="{'widget': 'monetary', 'display_currency': l['moneda']}"/>
                                 </td>
                             </tr>

@@ -1,20 +1,9 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo import fields, models
+from odoo.exceptions import UserError
 
-from datetime import datetime
-import base64
 from lxml import etree
-import requests
-import re
-
-#from OpenSSL import crypto
-#import xmlsig
-#from xades import XAdESContext, template, utils, ObjectIdentifier
-#from xades.policy import GenericPolicyId, ImpliedPolicy
-
-import logging
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -128,8 +117,7 @@ class AccountMove(models.Model):
         DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
         tipo_documento_fel = factura.journal_id.tipo_documento_fel
-        tipo_interno_factura = factura.type if 'type' in factura.fields_get() else factura.move_type
-        if tipo_documento_fel in ['FACT', 'FACM'] and tipo_interno_factura == 'out_refund':
+        if tipo_documento_fel in ['FACT', 'FACM'] and factura.move_type == 'out_refund':
             tipo_documento_fel = 'NCRE'
 
         moneda = "GTQ"
@@ -251,7 +239,7 @@ class AccountMove(models.Model):
         GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
         GranTotal.text = '{:.3f}'.format(factura.currency_id.round(gran_total))
 
-        if DatosEmision.find("{http://www.sat.gob.gt/dte/fel/0.2.0}Frases") and factura.currency_id.is_zero(gran_total_impuestos) and (factura.company_id.afiliacion_iva_fel or 'GEN') == 'GEN':
+        if DatosEmision.find("{http://www.sat.gob.gt/dte/fel/0.2.0}Frases") is not None and factura.currency_id.is_zero(gran_total_impuestos) and (factura.company_id.afiliacion_iva_fel or 'GEN') == 'GEN':
             Frase = etree.SubElement(DatosEmision.find("{http://www.sat.gob.gt/dte/fel/0.2.0}Frases"), DTE_NS+"Frase", CodigoEscenario=str(factura.frase_exento_fel) if factura.frase_exento_fel else "1", TipoFrase="4")
 
         if factura.company_id.adenda_fel:
@@ -305,10 +293,11 @@ class AccountMove(models.Model):
             if tipo_documento_fel in ['FESP']:
                 total_isr = abs(factura.amount_tax)
 
-                total_iva_retencion = 0
-                for impuesto in factura.amount_by_group:
-                    if impuesto[1] > 0:
-                        total_iva_retencion += impuesto[1]
+                totales_por_grupo = {}
+                for linea_impuesto in factura.line_ids.filtered('tax_line_id'):
+                    grupo = linea_impuesto.tax_line_id.tax_group_id
+                    totales_por_grupo[grupo] = totales_por_grupo.get(grupo, 0) - linea_impuesto.balance
+                total_iva_retencion = sum(monto for monto in totales_por_grupo.values() if monto > 0)
 
                 Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FacturaEspecial", NombreComplemento="FacturaEspecial", URIComplemento="http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0")
                 RetencionesFacturaEspecial = etree.SubElement(Complemento, CFE_NS+"RetencionesFacturaEspecial", Version="1", nsmap=NSMAP_FE)
@@ -319,44 +308,6 @@ class AccountMove(models.Model):
                 TotalMenosRetenciones = etree.SubElement(RetencionesFacturaEspecial, CFE_NS+"TotalMenosRetenciones")
                 TotalMenosRetenciones.text = str(factura.amount_total)
 
-        # signature = xmlsig.template.create(
-        #     xmlsig.constants.TransformInclC14N,
-        #     xmlsig.constants.TransformRsaSha256,
-        #     "Signature"
-        # )
-        # signature_id = utils.get_unique_id()
-        # ref_datos = xmlsig.template.add_reference(
-        #     signature, xmlsig.constants.TransformSha256, uri="#DatosEmision"
-        # )
-        # xmlsig.template.add_transform(ref_datos, xmlsig.constants.TransformEnveloped)
-        # ref_prop = xmlsig.template.add_reference(
-        #     signature, xmlsig.constants.TransformSha256, uri_type="http://uri.etsi.org/01903#SignedProperties", uri="#" + signature_id
-        # )
-        # xmlsig.template.add_transform(ref_prop, xmlsig.constants.TransformInclC14N)
-        # ki = xmlsig.template.ensure_key_info(signature)
-        # data = xmlsig.template.add_x509_data(ki)
-        # xmlsig.template.x509_data_add_certificate(data)
-        # xmlsig.template.x509_data_add_subject_name(data)
-        # serial = xmlsig.template.x509_data_add_issuer_serial(data)
-        # xmlsig.template.x509_issuer_serial_add_issuer_name(serial)
-        # xmlsig.template.x509_issuer_serial_add_serial_number(serial)
-        # qualifying = template.create_qualifying_properties(
-        #     signature, name=utils.get_unique_id()
-        # )
-        # props = template.create_signed_properties(
-        #     qualifying, name=signature_id, datetime=fecha_hora
-        # )
-        #
-        # GTDocumento.append(signature)
-        # ctx = XAdESContext()
-        # with open(path.join("/home/odoo/megaprint_leplan", "51043491-6747a80bb6a554ae.pfx"), "rb") as key_file:
-        #     ctx.load_pkcs12(crypto.load_pkcs12(key_file.read(), "Planeta123$"))
-        # ctx.sign(signature)
-        # ctx.verify(signature)
-        # DatosEmision.remove(SingatureTemp)
-
-        # xml_con_firma = etree.tostring(GTDocumento, encoding="utf-8").decode("utf-8")
-                
         return GTDocumento
 
     def dte_anulacion(self):
@@ -372,8 +323,7 @@ class AccountMove(models.Model):
         DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
     
         tipo_documento_fel = factura.journal_id.tipo_documento_fel
-        tipo_interno_factura = factura.type if 'type' in factura.fields_get() else factura.move_type
-        if tipo_documento_fel in ['FACT', 'FACM'] and tipo_interno_factura == 'out_refund':
+        if tipo_documento_fel in ['FACT', 'FACM'] and factura.move_type == 'out_refund':
             tipo_documento_fel = 'NCRE'
 
         nit_receptor = 'CF'
@@ -382,7 +332,7 @@ class AccountMove(models.Model):
         if tipo_documento_fel == "FESP" and factura.partner_id.cui:
             nit_receptor = factura.partner_id.cui
 
-        fecha = fields.Date.from_string(factura.invoice_date).strftime('%Y-%m-%d')
+        fecha = fields.Date.to_date(factura.invoice_date).strftime('%Y-%m-%d')
         hora = "00:00:00-06:00"
         fecha_hora = fecha+'T'+hora
         

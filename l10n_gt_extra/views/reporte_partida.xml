@@ -10,27 +10,27 @@
                             <h2><span t-esc="current_company_id.name"/>: Partida</h2>
 
                             <div class="row mt32">
-                                <div class="col-xs-4">
+                                <div class="col-4">
                                     <strong>Partida:</strong> <span t-field="o.name"/><br/>
                                 </div>
-                                <div class="col-xs-4">
+                                <div class="col-4">
                                     <strong>Ref:</strong> <span t-field="o.ref"/><br/>
                                 </div>
-                                <div class="col-xs-4">
+                                <div class="col-4">
                                     <strong>Fecha:</strong> <span t-field="o.date"/>
                                 </div>
                             </div>
 
                             <t t-set="total_debe" t-value="0" />
                             <t t-set="total_haber" t-value="0" />
-                            <table class="table table-condensed">
+                            <table class="table table-sm">
                                 <thead>
                                     <tr>
                                         <th>Código</th>
                                         <th>Cuenta</th>
                                         <th>Analítica</th>
-                                        <th class="text-right">Debe</th>
-                                        <th class="text-right">Haber</th>
+                                        <th class="text-end">Debe</th>
+                                        <th class="text-end">Haber</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -44,12 +44,12 @@
                                             <span t-field="l.account_id.name"/>
                                         </td>
                                         <td>
-                                            <span t-field="l.analytic_account_id"/>
+                                            <span t-out="analitica(l)"/>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                              <span t-field="l.debit" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                             <span t-field="l.credit" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
                                         </td>
                                     </tr>
@@ -61,10 +61,10 @@
                                         </td>
                                         <td>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                              <span t-esc="total_debe" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                             <span t-esc="total_haber" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
                                         </td>
                                     </tr>

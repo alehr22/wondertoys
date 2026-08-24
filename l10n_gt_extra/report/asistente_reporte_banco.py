@@ -1,11 +1,11 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo import fields, models
 import time
 
 class AsistenteReporteBanco(models.TransientModel):
     _name = 'l10n_gt_extra.asistente_reporte_banco'
+    _description = 'Asistente libro de banco'
 
     def _default_cuenta(self):
         if len(self.env.context.get('active_ids', [])) > 0:

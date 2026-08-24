@@ -1,17 +1,20 @@
 # -*- encoding: utf-8 -*-
 
 from odoo import api, models
-import logging
+
 
 class ReportePartida(models.AbstractModel):
     _name = 'report.l10n_gt_extra.reporte_partida'
+    _description = 'Partida contable'
+
+    def analitica(self, linea):
+        if not linea.analytic_distribution:
+            return ''
+        ids = [int(x) for llave in linea.analytic_distribution for x in llave.split(',')]
+        return ', '.join(self.env['account.analytic.account'].browse(ids).exists().mapped('name'))
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        return self.get_report_values(docids, data)
-
-    @api.model
-    def get_report_values(self, docids, data=None):
         model = 'account.move'
         docs = self.env[model].browse(docids)
 
@@ -19,7 +22,6 @@ class ReportePartida(models.AbstractModel):
             'doc_ids': docids,
             'doc_model': model,
             'docs': docs,
+            'analitica': self.analitica,
             'current_company_id': self.env.company,
         }
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
